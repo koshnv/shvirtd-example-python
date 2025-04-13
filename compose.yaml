@@ -1,26 +1,29 @@
 version: '3.8'
 
+iversion: '3.8'
+
 include:
   - proxy.yaml
 
 services:
   web:
-    image: cr.yandex/crp951l9uq6957ruf56i/python-app:test  # Качаю образ из Yandex Container Registry
-    restart: always  # Всегда рестартится
+    image: cr.yandex/crp951l9uq6957ruf56i/python-app:test
+    restart: always
     networks:
       backend:
         ipv4_address: 172.20.0.5
     environment:
-      - DB_HOST=db
+      - DB_HOST=172.20.0.10  # Используем IP вместо имени сервиса
       - DB_USER=${MYSQL_USER}
       - DB_PASSWORD=${MYSQL_PASSWORD}
       - DB_NAME=${MYSQL_DATABASE}
     depends_on:
-      - db  # Зависимость от сервиса db
+      db:
+        condition: service_healthy  # Ждём, пока db будет готова
 
   db:
-    image: mysql:8  # Качаю образ из Docker Registry
-    restart: always  # Всегда рестартится
+    image: mysql:8
+    restart: always
     networks:
       backend:
         ipv4_address: 172.20.0.10
@@ -30,7 +33,7 @@ services:
       - MYSQL_USER=${MYSQL_USER}
       - MYSQL_PASSWORD=${MYSQL_PASSWORD}
     volumes:
-      - db-data:/var/lib/mysql  # Для сохранения данных MySQL
+      - db-data:/var/lib/mysql
 
 volumes:
-  db-data:  # Выделяю том для хранения днных при пересборке контейнера
+  db-data:
